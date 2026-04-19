@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recon Helper</title>
+  <style>
+    /* ── Reset & base ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0c10;
+      --bg2:       #0f1218;
+      --bg3:       #151a22;
+      --border:    #1e2733;
+      --border2:   #2a3445;
+      --accent:    #00d4aa;
+      --accent2:   #00a882;
+      --accent-r:  #ff4d6d;
+      --accent-y:  #ffd166;
+      --text:      #c8d6e8;
+      --text-dim:  #5a6a80;
+      --text-muted:#8899aa;
+      --label:     #3a4a5e;
+      --green:     #00d4aa;
+      --red:       #ff4d6d;
+      --mono:      'Courier New', Courier, monospace;
+    }
+
+    body {
+      width: 420px;
+      min-height: 100px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ────────────────────────────────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #0d1520 0%, #0f1c2e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.5;
+    }
+
+    .logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent) 0%, #0099ff 100%);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(0,212,170,0.3);
+    }
+
+    .header-text h1 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #e8f0fa;
+      letter-spacing: 0.5px;
+    }
+
+    .header-text p {
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.3px;
+    }
+
+    .header-badge {
+      margin-left: auto;
+      font-size: 9px;
+      font-family: var(--mono);
+      color: var(--accent);
+      background: rgba(0,212,170,0.08);
+      border: 1px solid rgba(0,212,170,0.2);
+      border-radius: 4px;
+      padding: 2px 6px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Error Banner ──────────────────────────────────────────────────── */
+    #error-banner {
+      display: none;
+      background: rgba(255,77,109,0.1);
+      border-bottom: 1px solid rgba(255,77,109,0.3);
+      color: var(--red);
+      font-size: 11px;
+      padding: 8px 14px;
+      font-family: var(--mono);
+    }
+
+    /* ── Section wrapper ───────────────────────────────────────────────── */
+    .section {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 14px;
+    }
+
+    .section-title {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Info rows ─────────────────────────────────────────────────────── */
+    .info-grid {
+      display: grid;
+      gap: 6px;
+    }
+
+    .info-row {
+      display: grid;
+      grid-template-columns: 90px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      transition: border-color 0.15s;
+    }
+
+    .info-row:hover { border-color: var(--border2); }
+
+    .info-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .info-value {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .info-value.accent  { color: var(--accent); }
+    .info-value.dim     { color: var(--text-muted); font-style: italic; }
+
+    /* ── Protocol badge ────────────────────────────────────────────────── */
+    .protocol-badge {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 2px 7px;
+      border-radius: 3px;
+    }
+    .protocol-badge.https {
+      background: rgba(0,212,170,0.12);
+      border: 1px solid rgba(0,212,170,0.3);
+      color: var(--green);
+    }
+    .protocol-badge.http {
+      background: rgba(255,77,109,0.12);
+      border: 1px solid rgba(255,77,109,0.3);
+      color: var(--red);
+    }
+
+    /* ── TLS indicator ─────────────────────────────────────────────────── */
+    .tls-indicator {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 8px;
+      width: 100%;
+      justify-content: center;
+    }
+    .tls-indicator.secure {
+      background: rgba(0,212,170,0.08);
+      border: 1px solid rgba(0,212,170,0.2);
+      color: var(--green);
+    }
+    .tls-indicator.insecure {
+      background: rgba(255,209,102,0.08);
+      border: 1px solid rgba(255,209,102,0.25);
+      color: var(--accent-y);
+    }
+
+    /* ── Copy buttons ──────────────────────────────────────────────────── */
+    .copy-btn {
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--text-dim);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 7px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover {
+      color: var(--accent);
+      border-color: rgba(0,212,170,0.3);
+      background: rgba(0,212,170,0.06);
+    }
+    .copy-btn.copied {
+      color: var(--green);
+      border-color: rgba(0,212,170,0.4);
+      background: rgba(0,212,170,0.08);
+    }
+
+    /* ── Recon buttons grid ────────────────────────────────────────────── */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .recon-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: all 0.2s ease;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .recon-btn .btn-icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .recon-btn:hover {
+      background: var(--bg3);
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 10px rgba(0,212,170,0.1), inset 0 0 10px rgba(0,212,170,0.03);
+      transform: translateY(-1px);
+    }
+
+    .recon-btn:active { transform: translateY(0); }
+
+    /* ── JS Files section ──────────────────────────────────────────────── */
+    .js-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .js-badge {
+      font-size: 9px;
+      font-family: var(--mono);
+      font-weight: 700;
+      background: rgba(0,153,255,0.1);
+      border: 1px solid rgba(0,153,255,0.25);
+      color: #4da6ff;
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+
+    #js-list {
+      max-height: 160px;
+      overflow-y: auto;
+      display: grid;
+      gap: 3px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+    }
+
+    #js-list::-webkit-scrollbar { width: 4px; }
+    #js-list::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px;
+    }
+
+    .js-item {
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 5px 8px;
+      transition: border-color 0.15s;
+    }
+    .js-item:hover { border-color: var(--border2); }
+
+    .js-index {
+      font-size: 9px;
+      font-family: var(--mono);
+      color: var(--text-dim);
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .js-link {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: #4da6ff;
+      text-decoration: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+    .js-link:hover { color: #80c4ff; text-decoration: underline; }
+
+    .copy-mini {
+      font-size: 11px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 0 2px;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .copy-mini:hover { color: var(--accent); }
+    .copy-mini.copied { color: var(--green); }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-style: italic;
+      padding: 16px 0;
+    }
+
+    /* ── Footer ────────────────────────────────────────────────────────── */
+    .footer {
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-text {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.3px;
+    }
+
+    .footer-text span { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div class="header">
+    <div class="logo">𒌐</div>
+    <div class="header-text">
+      <h1>RECON HELPER</h1>
+      <p>Passive Intelligence Gathering</p>
+    </div>
+    <div class="header-badge">MV3</div>
+  </div>
+
+  <!-- ── Error Banner ───────────────────────────────────────── -->
+  <div id="error-banner"></div>
+
+  <!-- ── Section 1: URL Info ────────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Target Info</div>
+    <div class="info-grid">
+
+      <div class="info-row">
+        <span class="info-label">Full URL</span>
+        <span class="info-value" id="full-url" title="">—</span>
+        <button class="copy-btn" id="copy-url">Copy</button>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Protocol</span>
+        <span class="info-value" style="display:flex; align-items:center; gap:8px;">
+          <span id="protocol-badge" class="protocol-badge">—</span>
+          <span id="tls-indicator" class="tls-indicator" style="margin:0; width:auto; padding:2px 8px;">—</span>
+        </span>
+        <span></span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Hostname</span>
+        <span class="info-value accent" id="hostname">—</span>
+        <button class="copy-btn" id="copy-domain">Copy</button>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Root Domain</span>
+        <span class="info-value" id="root-domain">—</span>
+        <span></span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Subdomain</span>
+        <span class="info-value dim" id="subdomain">—</span>
+        <span></span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">IP Address</span>
+        <span class="info-value" id="ip-address">—</span>
+        <button class="copy-btn" id="copy-ip" style="display:none">Copy</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Section 2: Recon Tools ─────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">Recon Tools</div>
+    <div class="btn-grid">
+      <button class="recon-btn" id="btn-shodan">
+        <span class="btn-icon">👁</span>
+        Shodan
+      </button>
+      <button class="recon-btn" id="btn-wayback">
+        <span class="btn-icon">⏮</span>
+        Wayback
+      </button>
+      <button class="recon-btn" id="btn-whois">
+        <span class="btn-icon">🔍︎</span>
+        WHOIS
+      </button>
+      <button class="recon-btn" id="btn-crtsh">
+        <span class="btn-icon">🔐</span>
+        crt.sh
+      </button>
+      <button class="recon-btn" id="btn-securitytrails">
+        <span class="btn-icon">🗂</span>
+        Sec Trails
+      </button>
+      <button class="recon-btn" id="btn-urlscan">
+        <span class="btn-icon">🔬</span>
+        URLScan
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Section 3: JS Files ────────────────────────────────── -->
+  <div class="section">
+    <div class="js-header">
+      <div class="section-title" style="margin-bottom:0; flex:1">JavaScript Files</div>
+      <span class="js-badge" id="js-count">—</span>
+    </div>
+    <div id="js-list">
+      <div class="empty-state">Scanning page…</div>
+    </div>
+  </div>
+
+  <!-- ── Footer ─────────────────────────────────────────────── -->
+  <div class="footer">
+    <span class="footer-text">Recon Helper v1.0 · <span>passive only</span></span>
+    <span class="footer-text" style="color: var(--text-dim);">@Z3USX01</span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
