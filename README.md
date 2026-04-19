@@ -119,6 +119,3 @@ This tool is intended for educational and authorized security testing purposes o
 
 ---
 
-## License
-
-MIT License
